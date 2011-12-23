@@ -1,0 +1,90 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+mailq-fast-count - a fast and reliable way to count messages in your postfix spool
+
+=head1 SYNOPSIS
+
+Just run:
+
+  mailq-fast-count
+
+=cut
+
+use strict;
+use warnings;
+use Getopt::Long;
+use Postfix::Mailq;
+
+my @args = @ARGV;
+
+GetOptions(
+    'spool_dir:s' => \(my $spool_dir = Postfix::Mailq::DEFAULT_SPOOL_DIR),
+    'hold'        => \(my $get_hold = 1),
+#    'munin'       => \(my $pretend_to_be_munin = 0),
+);
+
+=cut
+if ($pretend_to_be_munin) {
+    if ($args[0] eq 'autoconfig') {
+        print "yes\n";
+        exit 0;
+    }
+    elsif ($args[0] eq 'config') {
+        print <<MUNIN_CONF;
+graph_title Postfix Mailqueue fast count
+graph_vlabel Mails in queue
+graph_category postfix
+graph_total Total
+active.label active
+deferred.label deferred
+maildrop.label maildrop
+incoming.label incoming
+corrupt.label corrupt
+hold.label held
+MUNIN_CONF
+    }
+}
+=cut
+
+my $count = Postfix::Mailq::get_fast_count({
+    get_hold => $get_hold,
+    spool_dir => $spool_dir,
+});
+
+# No postfix dir?
+if (! $count || ref $count ne "HASH") {
+    exit 1;
+}
+
+=cut
+if ($pretend_to_be_munin) {
+    for (keys %{ $count }) {
+        printf "%s.value %d\n", $_, $count->{$_};
+    }
+    exit 0;
+}
+=cut
+
+if ($count->{total} == 0) {
+    print "Mail queue is empty\n";
+    exit 0;
+}
+
+# Actual mailq output:
+#
+#-Queue ID- --Size-- ----Arrival Time---- -Sender/Recipient-------
+#1DA356A26A6     1272 Fri Dec 23 14:19:28  www-data
+#                                         xxxxxxxxx@yyyyyyyyyy.zzz
+#
+#                                         -- 1 Kbytes in 1 Request.
+#
+#
+
+# ... but we cannot output this info, because we're only counting
+
+for (keys %{ $count }) {
+    printf "%s: %d\n", $_, $count->{$_};
+}
+
