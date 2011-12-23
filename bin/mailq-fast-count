@@ -1,9 +1,20 @@
 #!/usr/bin/env perl
 #
-# mailq-fast-count
+# ABSTRACT: quickly count mails in your postfix spool
+# PODNAME: mailq-fast-count
 #
-# Outputs a count of all messages in your postfix spool
-#
+
+=head1 NAME
+
+mailq-fast-count
+
+=head1 DESCRIPTION
+
+Outputs a count of all messages in your postfix spool
+
+=cut
+
+package main; # dzil needs this or it stops working
 
 use strict;
 use warnings;
@@ -31,16 +42,6 @@ if ($count->{total} == 0) {
     print "Mail queue is empty\n";
     exit 0;
 }
-
-# Actual mailq output:
-#
-#-Queue ID- --Size-- ----Arrival Time---- -Sender/Recipient-------
-#1DA356A26A6     1272 Fri Dec 23 14:19:28  www-data
-#                                         xxxxxxxxx@yyyyyyyyyy.zzz
-#
-#                                         -- 1 Kbytes in 1 Request.
-#
-#
 
 # ... but we cannot output this info, because we're only counting
 
